@@ -1,0 +1,26 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: skt-ssp-dev
+  region: ap-southeast-2
+  version: "1.18"
+
+kubernetesNetworkConfig:
+  serviceIPv4CIDR: 100.64.0.0/24
+
+vpc:
+  subnets:
+    private:
+      ap-southeast-2a:
+        id: subnet-0a66aa8b55b8d2c3a
+      ap-southeast-2b:
+        id: subnet-070ad3862c8ca676f
+    public:
+      ap-southeast-2a:
+        id: subnet-027233e1559e5188e
+      ap-southeast-2b:
+        id: subnet-0e466947088723881
+
+privateCluster:
+  enabled: true

@@ -1,0 +1,41 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: skt-ssp-dev
+  region: ap-southeast-2
+
+managedNodeGroups:
+  - name: mng-backend
+    instanceType: m5.large
+    availabilityZones:
+      - ap-southeast-2a
+      - ap-southeast-2b
+      - ap-southeast-2c
+#    subnets:
+#      - subnet-0a66aa8b55b8d2c3a
+#      - subnet-070ad3862c8ca676f
+    desiredCapacity: 3
+    minSize: 2
+    maxSize: 4
+    volumeSize: 80
+    ssh:
+      allow: true
+      publicKeyName: skt-ssp-dev
+    labels:
+      role: worker
+    privateNetworking: true
+    tags:
+      nodegroup-role: worker
+    iam:
+      withAddonPolicies:
+        imageBuilder: true
+        autoScaler: true
+        externalDNS: true
+        certManager: true
+        ebs: true
+        efs: true
+        albIngress: true
+        cloudWatch: true
+#    ami: ami-0e124de4755b2734d
+    maxPodsPerNode: 110

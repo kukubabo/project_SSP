@@ -1,1 +1,58 @@
-project SSP
+##############
+##project SSP
+##############
+
+## eksctl 0.37.0
+eksctl create cluster -f cluster.yaml   # yaml 파일은 요건 보고 좀 더 고민
+
+## calico 적용하려면
+# 1. aws-node 삭제
+kubectl delete daemonset -n kube-system aws-node
+# 2. calico 설치
+kubectl apply -f https://docs.projectcalico.org/manifests/calico-vxlan.yaml
+
+## nodegroup 생성
+# 1. keypare 생성 (노드 접속용)
+aws ec2 create-key-pair --key-name skt-ssp-dev
+##################################################
+[ec2-user@ip-172-31-11-143 01.EKS]$ aws ec2 create-key-pair --key-name skt-ssp-dev
+{
+    "KeyFingerprint": "4b:3a:59:40:6b:f0:07:6b:68:c7:e4:77:b4:9a:8e:92:d5:bd:2b:7d",
+    "KeyMaterial": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAifxBuyFL9szu5rnnscBT1lEBb/anIMadGeY4UrZHjCKKZsG4\n65Ve15NFVaKPOKKtcQ1qQ+C2WupLptkzKf0/jxRAJrbOS+//4JQOtD5IV12gdFV7\nSHlTh22z5B+wAjJENr0tYt46YDnVmu/fvzA+/V6/QTOSfNkzGVoye14/AWDrXgYU\nw2M/TLuQgeymxTqQ7sGIMJ3P2FGnCyRIZEgf7ssDV3G+K2Vm6edH2XZf2VCdBHS9\nLocL0O7nUlSaskODfCuNuXHCusj+RjLyCmP5qYwSyzXWLSReQ+9eO0ixHdbyZ0K7\nygbr72qSg3KJbAt0r1ST4nmhXIfcpQ0Sc606zwIDAQABAoIBAEkCzfDrJFu5getZ\nkMwP3Qx4nk8U7se77+KFW2YAhwkSObM3a9ZTmfRtO3GdazTnduhr1b+GxlaCxHbL\nVHQySRA3Ad66OZwaqIS3MrSShAqeQslrdakacWUmWdoqHiJ7YHaqULqQpcjGsUyj\nAfwS1jGQkZg5ZphjANO4Ux/N9X6PdlJAR3OachMA24wDfBhrH7JRvyexd/zAfHsr\nyGG6HzQD0MnCBlJZ9G2oBGe1K2haeac1Kf/Sq2U0eNGl98OJRbXxWOJdAFl7AiG3\n4bqAZguAa7wpTaJCuVD6mBE7ybt7mPzoMVdCTcLuErARdMeVHo3NpIyodv8IcPaO\nhy/3APkCgYEA1aY/COBfCB4F0cwEAY8SSsSg4CzutNoR3umd35MlYdBF19zFqaef\nAiQtZng3BmOb6+2mLrnwkwiC9hixVokXLnTG/N/CPtCgfaseSwcmjc5oiqBRrQpZ\n6AB1eKY1dPlph2Jp2tDW24l+uQyL4b2Rm6KB8i5S7D+Doz2oupHaqTsCgYEApVZm\nJ4joT/oHj2mTCb75V91EFqEWVgsgwlaaR2DSxPvd88RqoIbfoNxXr7pP4p0i3AcN\n2/D74ebrXNKtQk3bKwV3MWP1hlyxmL+QgP2KLfwXKEA7yLmLZamoJbUOjB8SnkV0\n7SxV81ErqJO6b3qbnS/I0VzD9JkzQ9e2N1Y4O30CgYArt2K6jD6lyI7kSNyg/Qd/\nKRDKDieh9eUmOaNGNjO1+gnwi4oelt/gbkqj5wFLW2JyOiSA9ycUzu8NMCxJSq/l\nn5t/7sEuXT4ZuMPwEjx/U7bsdrV/tNiEsmNXFptlngtL2oVSct0j+tRlRP3yaPm8\nYNo6FeR91tk2s80sr9+QNQKBgGBr/q9XvIPHwNj2LPYmFawUMj0wPKJ5YuVzNA4k\nfUa7zDj5d2WewpRBbDHjaesy0L2Yr5Bw/bREw0Yi50Afv41bZqO7M9jj/f6i2Vcg\nhZFDzw1+SF9LNexYAOPcr1swU99Rils22/lGgTuSy8tvqYkF8QuIGg9vuOH7zxx+\nf9TRAoGBAJik5VA5oeu2eCHDwPmxsXgwh3MYURVsgcNV70v9V604JqJUdUPUCIdA\n7qAOyxNM9rS66f508NY6jlap0sFl/dDMOR5eG5cjGamFYFk++4+F8j4/kHScCemq\nJ45HW6MK3pBg2WvVYbgMS8xxZcxQMB8O7kd+6OEclBpvGNpD441Q\n-----END RSA PRIVATE KEY-----",
+    "KeyName": "skt-ssp-dev",
+    "KeyPairId": "key-04f6c25c31a4cc709"
+}
+##################################################
+
+# 2. nodegroup 생성
+eksctl create nodegroup -f nodegroup.backend.yaml
+
+## calico 설정
+# 1. pod ip 확인
+kubectl get pod -o wide -A --all-namespaces
+
+# 2. Calico Pod CIDR 설정(수정)
+kubectl edit ippool default-ipv4-ippool
+
+# 3. POD 재기동
+kubectl delete pod -n kube-system calico-kube-controllers-8586758878-45zvx coredns-6fb4cf484b-5s2s7 coredns-6fb4cf484b-nllzp
+
+# 4. pod ip 변경 확인
+kubectl get pod -o wide -A --all-namespaces
+
+# 5. Ipamblock 확인
+kubectl get ipamblocks
+
+# 6. Ipamblock 삭제 - 기존의 IP block 을 삭제
+kubectl delete ipamblocks 192-168-xxx-0-26 192-168-xxx-64-26
+
+
+##### metrics-server
+wget  https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.4.1/components.yaml
+
+# deployment.spec 에 hostNetwork: true 추가 하고 저장
+kubectl apply -f components.yaml
+
+kubectl top node
+
+

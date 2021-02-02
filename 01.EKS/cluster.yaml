@@ -1,0 +1,34 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: skt-ssp-dev
+  region: ap-southeast-2
+  version: "1.18"
+
+#kubernetesNetworkConfig:
+#  serviceIPv4CIDR: 10.245.0.0/17
+
+vpc:
+  cidr: 100.64.15.0/24
+#  subnets:
+#    private:
+#      ap-northeast-2a:
+#        id: subnet-0a66aa8b55b8d2c3a
+#      ap-northeast-2b:
+#        id: subnet-070ad3862c8ca676f
+#    public:
+#      ap-northeast-2a:
+#        id: subnet-027233e1559e5188e
+#      ap-northeast-2b:
+#        id: subnet-0e466947088723881
+  clusterEndpoints:      # can't use when privateCluster enabled
+    publicAccess: true   # default : true
+    privateAccess: true  # default : false
+
+# allows configuring a fully-private cluster in which no node has outbound internet access, and private access to AWS services is enabled via VPC endpoints
+# 이거 true 로 하면 VPC에 IGW가 생성되지 않아서 접속 불가능해짐...왜 이걸 넣지? 그냥 public 으로 만들고 설정한뒤에 private 로 바꾸던가;;
+#privateCluster:
+#  enabled: true          # default : false
+
+#availabilityZones: ["ap-southeast-2a", "ap-southeast-2c"]

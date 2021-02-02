@@ -1,0 +1,38 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: skt-mp-stg
+  region: ap-northeast-2
+managedNodeGroups:
+  - name: worker-4-16
+    instanceType: m5.xlarge
+    availabilityZones:
+      - ap-northeast-2a
+      - ap-northeast-2c
+    subnets:
+      - subnet-0a66aa8b55b8d2c3a
+      - subnet-070ad3862c8ca676f
+    desiredCapacity: 3
+    minSize: 2
+    maxSize: 4
+    volumeSize: 80
+    ssh:
+      allow: true
+      publicKeyName: skt-mp-stg-key
+    labels:
+      role: worker
+    privateNetworking: true
+    tags:
+      nodegroup-role: worker
+    iam:
+      withAddonPolicies:
+        imageBuilder: true
+        autoScaler: true
+        externalDNS: true
+        certManager: true
+        ebs: true
+        efs: true
+        albIngress: true
+        cloudWatch: true
+    ami: ami-0e124de4755b2734d
+    maxPodsPerNode: 110
