@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: skt-ssp-dev
+  name: skt-ssp-test
   region: ap-southeast-2
 
 managedNodeGroups:
@@ -10,11 +10,10 @@ managedNodeGroups:
     instanceType: m5.large
     availabilityZones:
       - ap-southeast-2a
-      - ap-southeast-2b
       - ap-southeast-2c
-#    subnets:
-#      - subnet-0a66aa8b55b8d2c3a
-#      - subnet-070ad3862c8ca676f
+    subnets:
+      - subnet-093592c637587ec1c
+      - subnet-072bab30669b660d0
     desiredCapacity: 3
     minSize: 2
     maxSize: 4
