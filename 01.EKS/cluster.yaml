@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: skt-ssp-dev
+  name: skt-ssp-test
   region: ap-southeast-2
   version: "1.18"
 
@@ -10,18 +10,18 @@ metadata:
 #  serviceIPv4CIDR: 10.245.0.0/17
 
 vpc:
-  cidr: 100.64.15.0/24
-#  subnets:
-#    private:
-#      ap-northeast-2a:
-#        id: subnet-0a66aa8b55b8d2c3a
-#      ap-northeast-2b:
-#        id: subnet-070ad3862c8ca676f
-#    public:
-#      ap-northeast-2a:
-#        id: subnet-027233e1559e5188e
-#      ap-northeast-2b:
-#        id: subnet-0e466947088723881
+#  cidr: 100.64.15.0/24
+  subnets:
+    public:
+      ap-southeast-2a:
+        id: subnet-0e2397662dd205639
+      ap-southeast-2c:
+        id: subnet-0e641885d16ada612
+    private:
+      ap-southeast-2a:
+        id: subnet-093592c637587ec1c
+      ap-southeast-2c:
+        id: subnet-072bab30669b660d0
   clusterEndpoints:      # can't use when privateCluster enabled
     publicAccess: true   # default : true
     privateAccess: true  # default : false
