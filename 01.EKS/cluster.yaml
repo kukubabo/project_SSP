@@ -6,8 +6,8 @@ metadata:
   region: ap-southeast-2
   version: "1.18"
 
-#kubernetesNetworkConfig:
-#  serviceIPv4CIDR: 10.245.0.0/17
+kubernetesNetworkConfig:
+  serviceIPv4CIDR: 10.244.0.0/17
 
 vpc:
 #  cidr: 100.64.15.0/24

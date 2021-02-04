@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: skt-ssp-dev
+  name: skt-ssp-test
   region: ap-southeast-2
 
 managedNodeGroups:
@@ -11,16 +11,16 @@ managedNodeGroups:
     availabilityZones:
       - ap-southeast-2a
       - ap-southeast-2c
-    subnets:
-      - subnet-093592c637587ec1c
-      - subnet-072bab30669b660d0
+#    subnets:
+#      - subnet-093592c637587ec1c
+#      - subnet-072bab30669b660d0
     desiredCapacity: 3
     minSize: 2
     maxSize: 4
     volumeSize: 80
     ssh:
       allow: true
-      publicKeyName: skt-ssp-dev
+      publicKeyName: ds07715-skt-ssp-test
     labels:
       role: worker
     privateNetworking: true

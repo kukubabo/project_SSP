@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: guestbook-example
+  namespace: test
+  annotations:
+    kubernetes.io/ingress.class: alb
+    #kubernetes.io/ingress.class: nginx
+  labels:
+    app: guestbook-example
+spec:
+  rules:
+  - host: guestbook.ekstest.com
+    http:
+      paths:
+        - path: /*
+          backend:
+            serviceName: guestbook
+            servicePort: 3000

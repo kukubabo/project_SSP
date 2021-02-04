@@ -8,9 +8,9 @@ metadata:
 managedNodeGroups:
   - name: mng-backend
     instanceType: m5.large
-    availabilityZones:
-      - ap-southeast-2a
-      - ap-southeast-2c
+#    availabilityZones:
+#      - ap-southeast-2a
+#      - ap-southeast-2c
     subnets:
       - subnet-093592c637587ec1c
       - subnet-072bab30669b660d0
