@@ -23,7 +23,7 @@ vpc:
       ap-southeast-2c:
         id: subnet-072bab30669b660d0
   clusterEndpoints:      # can't use when privateCluster enabled
-    publicAccess: true   # default : true
+    publicAccess: true   # default : fasle
     privateAccess: true  # default : false
 
 # allows configuring a fully-private cluster in which no node has outbound internet access, and private access to AWS services is enabled via VPC endpoints
