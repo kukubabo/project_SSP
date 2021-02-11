@@ -1,49 +1,246 @@
-##############
-##project SSP
-##############
-
-## eksctl 0.37.0
+######################################################
+### eksmaster
+### 1. eks 생성
+### 2. calico 적용
+### 3. nodegroup 생성
+### 4. calico 설정
+### 5. metrics-server 설치(HPA 적용대비)
+######################################################
+### 1. eks 생성
 eksctl create cluster -f cluster.yaml   # yaml 파일은 요건 보고 좀 더 고민
 
-## calico 적용하려면
-# 1. aws-node 삭제
+### 2. calico 적용
+# a. aws-node 삭제
 kubectl delete daemonset -n kube-system aws-node
-# 2. calico 설치
+# b. calico 설치
 kubectl apply -f https://docs.projectcalico.org/manifests/calico-vxlan.yaml
 
-## nodegroup 생성
-# 1. keypare 생성 (노드 접속용)
+### 3. nodegroup 생성
+# a. keypare 생성 (노드 접속용)
 콘솔에서 EC2 메뉴에서 keypare 에서 생성하고 pem 키 받아두기
-
-# 2. nodegroup 생성
+# b. nodegroup 생성
 eksctl create nodegroup -f nodegroup.fe.yaml
 
-## calico 설정
-# 1. pod ip 확인
+### 4. calico 설정
+# a. pod ip 확인
 kubectl get pod -o wide -A --all-namespaces
-
-# 2. Calico Pod CIDR 설정(수정)
+# b. Calico Pod CIDR 설정(수정)
 kubectl edit ippool default-ipv4-ippool
-
-# 3. POD 재기동
+# c. POD 재기동
 kubectl delete pod -n kube-system calico-kube-controllers-8586758878-45zvx coredns-6fb4cf484b-5s2s7 coredns-6fb4cf484b-nllzp
-
-# 4. pod ip 변경 확인
+# d. pod ip 변경 확인
 kubectl get pod -o wide -A --all-namespaces
-
-# 5. Ipamblock 확인
+# e. Ipamblock 확인
 kubectl get ipamblocks
-
-# 6. Ipamblock 삭제 - 기존의 IP block 을 삭제
+# f. Ipamblock 삭제 - 기존의 IP block 을 삭제
 kubectl delete ipamblocks 192-168-xxx-0-26 192-168-xxx-64-26
 
-
-##### metrics-server
+### 5. metrics-server
+# a. 설치 파일 다운로드
 wget  https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.4.1/components.yaml
-
-# deployment.spec 에 hostNetwork: true 추가 하고 저장
+# b. deployment.spec 에 hostNetwork: true 추가 하고 저장
+vi components.yaml
+# c. 설치
 kubectl apply -f components.yaml
-
+# d. top 명령 확인
 kubectl top node
+
+
+
+######################################################
+### 공통 / MFA 인증 적용된 IAM 계정에서 aws credentials 값 자동 업데이트 스크립트
+######################################################
+#!/bin/bash
+
+### SET Account Info. ####################
+MASTER_ID=123456789012
+IAMUSR_ID=iamuser
+##########################################
+
+### delete existing info #################
+sed -i '4,7d' credentials
+
+### get new token & set credentials ######
+#aws sts get-session-token --serial-number arn:aws:iam::${MASTER_ID}:mfa/${IAMUSR_ID} --profile default --token-code $1
+aws sts get-session-token --serial-number arn:aws:iam::${MASTER_ID}:mfa/${IAMUSR_ID} --profile default --token-code $1 > getsts.rst
+
+NEW_AKI=`cat getsts.rst |jq -r '.Credentials.AccessKeyId'`
+NEW_SAK=`cat getsts.rst |jq -r '.Credentials.SecretAccessKey'`
+NEW_ST=` cat getsts.rst |jq -r '.Credentials.SessionToken'`
+
+echo "[mfa]"                                  >> credentials
+echo "aws_access_key_id = ${NEW_AKI}"         >> credentials
+echo "aws_secret_access_key = ${NEW_SAK}"     >> credentials
+echo "aws_session_token = ${NEW_ST}"          >> credentials
+
+rm getsts.rst
+######################################################
+
+
+######################################################
+### eksmaster
+### 1. eks 생성
+### 2. calico 적용
+### 3. nodegroup 생성
+### 4. calico 설정
+### 5. metrics-server 설치(HPA 적용대비)
+######################################################
+### 1. eks 생성 ( 약 25분 소요 - 생성 12~15분, 업데이트 10분 )
+cd 01.EKS
+eksctl create cluster -f cluster.yaml
+
+### 2. calico 적용
+# a. aws-node 삭제
+kubectl delete daemonset -n kube-system aws-node
+# b. calico 설치
+kubectl apply -f https://docs.projectcalico.org/manifests/calico-vxlan.yaml
+
+### 3. nodegroup 생성
+# a. keypare 생성 (노드 접속용)
+콘솔에서 EC2 메뉴에서 keypare 에서 생성하고 pem 키 받아두기
+# b. nodegroup 생성 ( 약 4분 소요 )
+eksctl create nodegroup -f nodegroup.fe.yaml
+
+### 4. calico 설정
+# a. pod ip 확인
+kubectl get pod -o wide -A --all-namespaces
+# b. Calico Pod CIDR 설정(수정)
+kubectl edit ippool default-ipv4-ippool
+# c. POD 재기동
+kubectl delete pod -n kube-system calico-kube-controllers-8586758878-45zvx coredns-6fb4cf484b-5s2s7 coredns-6fb4cf484b-nllzp
+# d. pod ip 변경 확인
+kubectl get pod -o wide -A --all-namespaces
+# e. Ipamblock 확인
+kubectl get ipamblocks
+# f. Ipamblock 삭제 - 기존의 IP block 을 삭제
+kubectl delete ipamblocks 192-168-xxx-0-26 192-168-xxx-64-26
+
+### 5. metrics-server
+# a. 설치 파일 다운로드
+wget  https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.4.1/components.yaml
+# b. deployment.spec 에 hostNetwork: true 추가 하고 저장
+vi components.yaml
+# c. 설치
+kubectl apply -f components.yaml
+# d. top 명령 확인
+kubectl top node
+
+
+######################################################
+### eksadm / kubeconfig 생성 ( 권한없음 확인 )
+######################################################
+aws eks --region ap-southeast-2 update-kubeconfig --name EKSTEST-dev-eks
+
+# kubectl 명령 수행해도 login 하라고 뜸 ( 아직 접근 권한이 없음 )
+kubectl get all --all-namespaces 
+>> error: You must be logged in to the server (Unauthorized)
+
+
+######################################################
+### eksusr / kubeconfig 생성 ( 권한없음 확인 )
+######################################################
+aws eks --region ap-southeast-2 update-kubeconfig --name EKSTEST-dev-eks
+
+# kubectl 명령 수행해도 login 하라고 뜸 ( 아직 접근 권한이 없음 )
+kubectl get all --all-namespaces 
+>> error: You must be logged in to the server (Unauthorized)
+
+
+######################################################
+### eksmaster / ADM ROLE 생성 및 eksadm, eksusr 연결
+### create_role.sh 내용
+###   - arn:aws:iam::마스터ID:root 에 대해 sts:AssumeRole POLICY 포함한 ROLE 생성 ( EKSTEST-dev-role-eksadmin, EKSTEST-dev-role-eksuser )
+###   - 생성한 role을 eks에 연결 ( eksctl create iamidentitymapping ... 하면 eks 클러스터의 aws-auth ConfigMap에 role - User 연결해서 설정 추가됨 -> eksctl 안쓰고 ConfigMap 직접 수정도 가능 )
+######################################################
+cd 02.IAM-ROLE
+sh create_role.sh
+>> arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin
+>> arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksuser
+>> [ℹ]  eksctl version 0.37.0
+>> [ℹ]  using region ap-southeast-2
+>> [ℹ]  adding identity "arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin" to auth ConfigMap
+>> [ℹ]  eksctl version 0.37.0
+>> [ℹ]  using region ap-southeast-2
+>> [ℹ]  adding identity "arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksuser" to auth ConfigMap
+>> ### user setting guide (get kubeconfig) ###############
+>> aws eks update-kubeconfig --name EKSTEST-dev-eks --region ap-southeast-2 --role-arn arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin
+>> aws eks update-kubeconfig --name EKSTEST-dev-eks --region ap-southeast-2 --role-arn arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksuser
+>> #######################################################
+
+### IAM 에서 EKSTEST-dev-role-eksadmin ROLE의 신뢰관계 편집해서 root -> user/IAM계정명 으로 수정
+### 그룹 추가가 안되서 user 하나하나 추가해야 하는 상황....
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::123456789012:user/eksadm"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {}
+    }
+  ]
+}
+
+### IAM 에서 EKSTEST-dev-role-eksuser ROLE의 신뢰관계 편집해서 root -> user/IAM계정명 으로 수정
+### 그룹 추가가 안되서 user 하나하나 추가해야 하는 상황.... 
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::123456789012:user/eksusr"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {}
+    }
+  ]
+}
+
+### EKSTEST-dev-role-eksuser ROLE에 속한 사용자가 접근할 수 있도록 role, rolebinding 추가
+kubectl create ns testnamespace
+sh roleNrolebinding.sh testnamespace
+
+
+######################################################
+### eksadm / kubeconfig 생성 ( 정상 접근 확인 )
+######################################################
+aws eks update-kubeconfig --name EKSTEST-dev-eks --region ap-southeast-2 --role-arn arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin
+
+# kubectl 명령 수행하면 정상 수행 확인
+kubectl get all --all-namespaces 
+
+######################################################
+### eksusr / kubeconfig 생성 ( 특정 ns 에만 접근 확인 )
+######################################################
+### 혹시나 admin role 가지고 kubeconfig 생성하면 되지 않을까 하고 테스트해봐도 안됨
+aws eks update-kubeconfig --name EKSTEST-dev-eks --region ap-southeast-2 --role-arn arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin
+>> Updated context arn:aws:eks:ap-southeast-2:123456789012:cluster/EKSTEST-dev-eks in /home/ec2-user/.kube/config
+kubectl get all --all-namespaces
+>> An error occurred (AccessDenied) when calling the AssumeRole operation: User: arn:aws:iam::123456789012:user/eksusr is not authorized to perform: sts:AssumeRole on resource: arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksadmin
+>> Unable to connect to the server: getting credentials: exec: exit status 254
+
+### user role 가지고 생성하면
+aws eks update-kubeconfig --name EKSTEST-dev-eks --region ap-southeast-2 --role-arn arn:aws:iam::123456789012:role/EKSTEST-dev-role-eksuser
+>> Updated context arn:aws:eks:ap-southeast-2:123456789012:cluster/EKSTEST-dev-eks in /home/ec2-user/.kube/config
+# 혹시나 하고 all-namespaces 같은 접근을 시도하면 바로 에러 발생
+kubectl get all --all-namespaces
+>> Error from server (Forbidden): pods is forbidden: User "dev-user" cannot list resource "pods" in API group "" at the cluster scope
+>> Error from server (Forbidden): replicationcontrollers is forbidden: User "dev-user" cannot list resource "replicationcontrollers" in API group "" at the cluster scope
+>> Error from server (Forbidden): services is forbidden: User "dev-user" cannot list resource "services" in API group "" at the cluster scope
+>> Error from server (Forbidden): daemonsets.apps is forbidden: User "dev-user" cannot list resource "daemonsets" in API group "apps" at the cluster scope
+>> Error from server (Forbidden): deployments.apps is forbidden: User "dev-user" cannot list resource "deployments" in API group "apps" at the cluster scope
+>> Error from server (Forbidden): replicasets.apps is forbidden: User "dev-user" cannot list resource "replicasets" in API group "apps" at the cluster scope
+>> Error from server (Forbidden): statefulsets.apps is forbidden: User "dev-user" cannot list resource "statefulsets" in API group "apps" at the cluster scope
+>> Error from server (Forbidden): horizontalpodautoscalers.autoscaling is forbidden: User "dev-user" cannot list resource "horizontalpodautoscalers" in API group "autoscaling" at the cluster scope
+>> Error from server (Forbidden): jobs.batch is forbidden: User "dev-user" cannot list resource "jobs" in API group "batch" at the cluster scope
+>> Error from server (Forbidden): cronjobs.batch is forbidden: User "dev-user" cannot list resource "cronjobs" in API group "batch" at the cluster scope
+
+# testnamespace 에 대해 명령 수행은 잘됨(resource 생성된게 없을 뿐)
+kubectl -n testnamespace get po
+>> No resources found in testnamespace namespace.
+
 
 
