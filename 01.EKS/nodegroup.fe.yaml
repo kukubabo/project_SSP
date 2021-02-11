@@ -12,8 +12,8 @@ managedNodeGroups:
       - ap-southeast-2a
       - ap-southeast-2c
 #    subnets:
-#      - subnet-0d06d287dc930f2c8
-#      - subnet-000af519e80a27590
+#      - subnet-11111111111111111
+#      - subnet-22222222222222222
     desiredCapacity: 2
     minSize: 1
     maxSize: 3
