@@ -2,9 +2,11 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: skt-ssp-test
+  name: SSP-d-eks
   region: ap-southeast-2
   version: "1.18"
+  tags:
+    ServiceName: SSP
 
 kubernetesNetworkConfig:
   serviceIPv4CIDR: 10.244.0.0/17
@@ -14,14 +16,14 @@ vpc:
   subnets:
     public:
       ap-southeast-2a:
-        id: subnet-0e2397662dd205639
+        id: subnet-0a8a8b25014c83a11
       ap-southeast-2c:
-        id: subnet-0e641885d16ada612
+        id: subnet-0d91e66fd2aaa8c3a
     private:
       ap-southeast-2a:
-        id: subnet-093592c637587ec1c
+        id: subnet-041c67f72d6f47c6d
       ap-southeast-2c:
-        id: subnet-072bab30669b660d0
+        id: subnet-0c89fc2dd49642638
   clusterEndpoints:      # can't use when privateCluster enabled
     publicAccess: true   # default : fasle
     privateAccess: true  # default : false

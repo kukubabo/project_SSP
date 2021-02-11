@@ -2,30 +2,31 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: skt-ssp-test
+  name: SSP-d-eks
   region: ap-southeast-2
 
 managedNodeGroups:
-  - name: mng-frontend
+  - name: SSP-d-eks-ng-fe
     instanceType: m5.large
     availabilityZones:
       - ap-southeast-2a
       - ap-southeast-2c
 #    subnets:
-#      - subnet-093592c637587ec1c
-#      - subnet-072bab30669b660d0
-    desiredCapacity: 3
-    minSize: 2
-    maxSize: 4
+#      - subnet-0d06d287dc930f2c8
+#      - subnet-000af519e80a27590
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
     volumeSize: 80
     ssh:
       allow: true
-      publicKeyName: ds07715-skt-ssp-test
+      publicKeyName: SSP-d-key
     labels:
       role: worker
     privateNetworking: true
     tags:
       nodegroup-role: worker
+      ServiceName: SSP
     iam:
       withAddonPolicies:
         imageBuilder: true
@@ -38,3 +39,5 @@ managedNodeGroups:
         cloudWatch: true
 #    ami: ami-0e124de4755b2734d
     maxPodsPerNode: 110
+    instanceName: node-fe        # EC2 Name Taga                          :      -ng-fe
+    instancePrefix: SSP-d        # EC2 Name Prefix(Name Tag 앞에 붙일 값) : SSP-d
